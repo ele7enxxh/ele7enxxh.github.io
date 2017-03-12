@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+  <head>
+    
+<meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+  <meta name="description" content="看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）解析"/>
+
+
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Ele7enxxh's Blog">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.png?v=2.2.x" />
+
+
+
+<link rel="canonical" href="http://ele7enxxh.com/Pediy-2014-Second-Stage-Of-APP-Offensive-And-Defensive-Competition-Analysis-1.html"/>
+
+
+<meta name="description" content="本文为看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）的writeup。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）解析">
+<meta property="og:url" content="http://ele7enxxh.com/Pediy-2014-Second-Stage-Of-APP-Offensive-And-Defensive-Competition-Analysis-1.html">
+<meta property="og:site_name" content="Ele7enxxh's Blog">
+<meta property="og:description" content="本文为看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）的writeup。">
+<meta property="og:updated_time" content="2016-03-23T06:31:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）解析">
+<meta name="twitter:description" content="本文为看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）的writeup。">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=2.2.x" />
+
+
+
+  <link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
+
+
+
+
+
+<script>
+  var CONFIG = {
+    search: true,
+    searchPath: "/search.xml",
+    fancybox: true,
+    toc: true,
+  }
+</script>
+
+
+
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?e9925f9b47e12674b38b04ce3cde49e6";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+    <title> 看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）解析 · Ele7enxxh's Blog </title>
+  </head>
+
+  <body><div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/." class="logo">Ele7enxxh's Blog</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    
+      <a href="/">
+        <li class="mobile-menu-item">
+          
+          
+            Home
+          
+        </li>
+      </a>
+    
+      <a href="/archives/">
+        <li class="mobile-menu-item">
+          
+          
+            Archives
+          
+        </li>
+      </a>
+    
+  </ul>
+</nav>
+
+    <div class="container" id="mobile-panel">
+      <header id="header" class="header"><div class="logo-wrapper">
+  <a href="/." class="logo">Ele7enxxh's Blog</a>
+</div>
+
+<nav class="site-navbar">
+  
+    <ul id="menu" class="menu">
+      
+        <li class="menu-item">
+          <a class="menu-item-link" href="/">
+            
+            
+              Home
+            
+          </a>
+        </li>
+      
+        <li class="menu-item">
+          <a class="menu-item-link" href="/archives/">
+            
+            
+              Archives
+            
+          </a>
+        </li>
+      
+      
+        <li class="menu-search">
+          <form>
+            <i class="iconfont icon-search" id="open-search"></i>
+            <input type="text" class="search-input" id="search-input" />
+            <i class="iconfont icon-close" id="close-search"></i>
+          </form>
+        </li>
+      
+    </ul>
+  
+</nav>
+      </header>
+
+      <main id="main" class="main">
+        <div class="content-wrapper">
+          <div id="content" class="content">
+            
+  
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）解析
+        
+      </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          Nov 4, 2014
+        </span>
+      </div>
+    </header>
+
+    
+    
+
+    <div class="post-content">
+      
+        <p>本文为看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）的writeup。<a id="more"></a></p>
+<p>链接：<a href="http://bbs.pediy.com/showthread.php?t=193824" target="_blank" rel="external">http://bbs.pediy.com/showthread.php?t=193824</a><br>平台：Android<br>类型：CrackMe</p>
+<p>Java层代码很简单，输入name和passwd后，转到so中的验证函数进行处理，APK也没有做反调试保护，主要考的是动态库调试的基本能力和arm汇编知识。<br>简单的说下验证逻辑：</p>
+<ol>
+<li>对name和passwd的长度进行限制（实际上由后面具体的逻辑判断，name长度应该固定为9）：<br> <code>6 &lt;= strlen(name) &lt;= 14</code><br> <code>12 &lt;= strlen(passwd) &lt;= 30</code></li>
+<li>并且passwd[3] = passwd[7] = passwd[11] = “-”，也就是说输入的passwd是类似序列号的形式，每3个用“-”分割；</li>
+<li>初始化0x100大小的表，表中数据固定；</li>
+<li>将passwd的值作为下标，查询表中对应数据，并进行一些移位异或处理；</li>
+<li>上一步得出的结果即为passwd对应的name，然后与我们输入的name做对比，相同即验证成功、否则验证失败；</li>
+</ol>
+<p>具体的逻辑这里不在记录，下面给出注册机，可能有些问题，时间有限就没有继续分析了：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div></pre></td><td class="code"><pre><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></div><div class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">initKeyTab</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">char</span> *keyTab)</span></span></div><div class="line">&#123;</div><div class="line">    <span class="built_in">memset</span>(keyTab, <span class="number">0x80</span>, <span class="number">0x100</span>);</div><div class="line"> </div><div class="line">    <span class="keyword">int</span> j;</div><div class="line">    <span class="keyword">int</span> i;</div><div class="line"> </div><div class="line">    j = <span class="number">0x41</span>;</div><div class="line">    <span class="keyword">for</span>(i = <span class="number">0x0</span>; i &lt; <span class="number">0x1A</span>; ++i)</div><div class="line">    &#123;</div><div class="line">        keyTab[j + <span class="number">1</span>] = i;</div><div class="line">        ++j;</div><div class="line">    &#125;</div><div class="line"> </div><div class="line">    j = <span class="number">0x62</span>;</div><div class="line">    <span class="keyword">for</span>(i = <span class="number">0x1A</span>; i &lt; <span class="number">0x34</span>; ++i)</div><div class="line">    &#123;</div><div class="line">        keyTab[j] = i;</div><div class="line">        i = i &lt;&lt; <span class="number">0x18</span>;</div><div class="line">        i = i &gt;&gt; <span class="number">0x18</span>;</div><div class="line">        ++j;</div><div class="line">    &#125;</div><div class="line"> </div><div class="line">    j = <span class="number">0x31</span>;</div><div class="line">    <span class="keyword">for</span>(i = <span class="number">0x34</span>; i &lt; <span class="number">0x3e</span>; ++i)</div><div class="line">    &#123;</div><div class="line">        keyTab[j] = i;</div><div class="line">        i = i &lt;&lt; <span class="number">0x18</span>;</div><div class="line">        i = i &gt;&gt; <span class="number">0x18</span>;</div><div class="line">        ++j;</div><div class="line">    &#125;</div><div class="line"> </div><div class="line">    keyTab[<span class="number">0x2C</span>] = <span class="number">0x3E</span>;</div><div class="line">    keyTab[<span class="number">0x30</span>] = <span class="number">0x3F</span>;</div><div class="line">    keyTab[<span class="number">0x3E</span>] = <span class="number">0x0</span>;</div><div class="line">    keyTab[<span class="number">0x0</span>] = <span class="number">0x1</span>;</div><div class="line"> </div><div class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; <span class="number">0x100</span>; ++i)</div><div class="line">    &#123;</div><div class="line">        <span class="built_in">printf</span>(<span class="string">"%02x "</span>, keyTab[i]);</div><div class="line">        <span class="keyword">if</span>((i+<span class="number">1</span>) % <span class="number">16</span> == <span class="number">0</span>)</div><div class="line">        &#123;</div><div class="line">            <span class="built_in">printf</span>(<span class="string">"\n"</span>);</div><div class="line">        &#125;   </div><div class="line">    &#125;</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"\n"</span>);</div><div class="line">&#125;</div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">getPasswd</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">char</span> *name, <span class="keyword">int</span> name_length, <span class="keyword">unsigned</span> <span class="keyword">char</span> *keyTab, <span class="keyword">unsigned</span> <span class="keyword">char</span> *passwd)</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">int</span> i;</div><div class="line">    <span class="keyword">int</span> k = <span class="number">0</span>;</div><div class="line">    <span class="keyword">char</span> mid[<span class="number">4</span>];</div><div class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; name_length; i += <span class="number">3</span>)</div><div class="line">    &#123;</div><div class="line">        <span class="keyword">int</span> j;</div><div class="line"> </div><div class="line">        mid[<span class="number">0</span>] = name[i] &gt;&gt; <span class="number">0x2</span>;</div><div class="line">        mid[<span class="number">1</span>] = ((name[i] &lt;&lt; <span class="number">0x4</span>) &amp; <span class="number">0x3F</span>) ^ (name[i + <span class="number">1</span>] &gt;&gt; <span class="number">0x4</span>);</div><div class="line">        mid[<span class="number">2</span>] = ((name[i + <span class="number">1</span>] &amp; <span class="number">0x0F</span>) &lt;&lt; <span class="number">0x2</span>) ^ (name[i + <span class="number">2</span>] &gt;&gt; <span class="number">0x6</span>);</div><div class="line">        mid[<span class="number">3</span>] = name[i + <span class="number">2</span>] &amp; <span class="number">0x3F</span>;</div><div class="line"> </div><div class="line">        <span class="keyword">for</span>(j = <span class="number">0</span>; j &lt;= <span class="number">0x100</span>; ++j)</div><div class="line">        &#123;</div><div class="line">            <span class="keyword">if</span>(keyTab[j] == mid[<span class="number">0</span>])</div><div class="line">            &#123;</div><div class="line">                passwd[k] = j - <span class="number">1</span>;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">if</span>(keyTab[j] == mid[<span class="number">1</span>])</div><div class="line">            &#123;</div><div class="line">                passwd[k + <span class="number">1</span>] = j - <span class="number">1</span>;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">if</span>(keyTab[j] == mid[<span class="number">2</span>])</div><div class="line">            &#123;</div><div class="line">                passwd[k + <span class="number">2</span>] = j - <span class="number">1</span>;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">if</span>(keyTab[j] == mid[<span class="number">3</span>])</div><div class="line">            &#123;</div><div class="line">                passwd[k + <span class="number">3</span>] = j - <span class="number">1</span>;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line"> </div><div class="line">        k += <span class="number">4</span>;</div><div class="line">    &#125;</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"passwd: %s\n"</span>, passwd);</div><div class="line">&#125;</div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">void</span> <span class="title">main</span><span class="params">()</span></span></div><div class="line">&#123;</div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> name[] = <span class="string">"123456789"</span>;</div><div class="line">    <span class="keyword">int</span> name_length = <span class="built_in">strlen</span>(name);</div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> passwd[<span class="number">12</span>];</div><div class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> keyTab[<span class="number">0x100</span>];</div><div class="line">    initKeyTab(keyTab);</div><div class="line">    getPasswd(name, name_length, keyTab, passwd);</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>另外给出两组可用的：<br>123456789    MTI-zND-U2N-zg5<br>abcdefghi      YWJ-jZG-VmZ-2hp</p>
+
+      
+    </div>
+
+    
+      
+      
+
+  <div class="post-copyright">
+    <p class="copyright-item">
+      <span>作者: </span>
+      <span>ele7enxxh</span>
+    </p>
+    <p class="copyright-item">
+      <span>来源: </span>
+      <a href="http://ele7enxxh.com">http://ele7enxxh.com</a>
+    </p>
+    <p class="copyright-item">
+      <span>链接: </span>
+      <a href="http://ele7enxxh.com/Pediy-2014-Second-Stage-Of-APP-Offensive-And-Defensive-Competition-Analysis-1.html">http://ele7enxxh.com/Pediy-2014-Second-Stage-Of-APP-Offensive-And-Defensive-Competition-Analysis-1.html</a>
+    </p>
+
+    <p class="copyright-item lincese">
+      
+      本文采用<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">知识共享署名-非商业性使用 4.0 国际许可协议</a>进行许可
+    </p>
+  </div>
+
+
+
+      
+      
+    
+
+    
+  </article>
+
+
+          </div>
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+        </div>  
+      </main>
+
+      <footer id="footer" class="footer">
+
+  <div class="social-links">
+    
+      
+        
+          <a href="mailto:ele7enxxh@qq.com" class="iconfont icon-email" title="email"></a>
+        
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        
+          <a href="https://github.com/ele7enxxh" class="iconfont icon-github" title="github"></a>
+        
+      
+    
+      
+        
+          <a href="http://weibo.com/ele7enxxh" class="iconfont icon-weibo" title="weibo"></a>
+        
+      
+    
+      
+    
+      
+    
+    
+    
+      <a href="/atom.xml" class="iconfont icon-rss" title="rss"></a>
+    
+  </div>
+
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a>
+  </span>
+  
+  <span class="theme-info">
+    Theme - 
+    <a class="theme-link" href="https://github.com/ahonn/hexo-theme-even">Even</a>
+  </span>
+
+  <span class="copyright-year">
+    
+    &copy; 
+     
+      2015 - 
+    
+    2017
+
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">ele7enxxh</span>
+  </span>
+</div>
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+
+    
+  
+  
+  <script type="text/javascript">
+    var disqus_config = function () {
+        this.page.url = 'http://ele7enxxh.com/Pediy-2014-Second-Stage-Of-APP-Offensive-And-Defensive-Competition-Analysis-1.html';
+        this.page.identifier = 'Pediy-2014-Second-Stage-Of-APP-Offensive-And-Defensive-Competition-Analysis-1.html';
+        this.page.title = '看雪-2014 APP应用攻防竞赛第二阶段第1题（攻击篇）解析';
+    };
+    (function() {
+    var d = document, s = d.createElement('script');
+
+    s.src = '//ele7enxxh.disqus.com/embed.js';
+
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+    })();  
+  </script>
+
+
+
+
+    
+  
+
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+    <script type="text/javascript" src="/lib/slideout/slideout.js"></script>
+  
+
+  
+    <script type="text/javascript" src="/lib/fancybox/jquery.fancybox.pack.js"></script>
+  
+
+
+    <script type="text/javascript" src="/js/src/even.js?v=2.2.x"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=2.2.x"></script>
+
+    
+  <script type="text/html" id="search-result">
+    <article class="post">
+      <header class="post-header">
+        <h1 class="post-title">
+          <a href="$url$" class="post-link">
+            $title$
+          </a>
+        </h1>
+      </header>
+      <div class="post-content">
+        $content$
+        <div class="read-more">
+          <a href="$url$" class="read-more-link">
+            Read more..
+          </a>
+        </div>
+      </div>
+    </article>
+  </script>
+  <script type="text/html" id="no-search-result">
+    <div class="no-result">
+      <h2>No result found!</h2>
+    </div>
+  </script>
+  <script type="text/javascript" src="/js/src/search.js?v=2.2.x"></script>
+
+  </body>
+</html>

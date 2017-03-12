@@ -1,0 +1,104 @@
+diff -urN a/afl-2.39b/llvm_mode/afl-clang-fast.c b/afl-2.39b/llvm_mode/afl-clang-fast.c
+--- a/afl-2.39b/llvm_mode/afl-clang-fast.c	2017-01-25 10:51:26.000000000 +0800
++++ b/afl-2.39b/llvm_mode/afl-clang-fast.c	2017-03-11 05:04:50.248438000 +0800
+@@ -152,8 +152,6 @@
+ 
+     if (strstr(cur, "FORTIFY_SOURCE")) fortify_set = 1;
+ 
+-    if (!strcmp(cur, "-shared")) maybe_linking = 0;
+-
+     if (!strcmp(cur, "-Wl,-z,defs") ||
+         !strcmp(cur, "-Wl,--no-undefined")) continue;
+ 
+Binary files a/afl-2.39b/llvm_mode/afl-llvm-pass.dwo and b/afl-2.39b/llvm_mode/afl-llvm-pass.dwo differ
+diff -urN a/afl-2.39b/llvm_mode/afl-llvm-rt.o.c b/afl-2.39b/llvm_mode/afl-llvm-rt.o.c
+--- a/afl-2.39b/llvm_mode/afl-llvm-rt.o.c	2017-02-01 09:59:41.000000000 +0800
++++ b/afl-2.39b/llvm_mode/afl-llvm-rt.o.c	2017-03-11 05:04:13.616438000 +0800
+@@ -34,6 +34,21 @@
+ #include <sys/wait.h>
+ #include <sys/types.h>
+ 
++/* To cross compile afl-llvm-rt.o.c with Android toolchain, we need use syscall(), not shmat(). */
++
++#ifdef __x86_64__
++#ifndef SYS_shmat
++#define SYS_shmat 30
++#endif
++#else
++#ifndef IPCOP_shmat
++#define IPCOP_shmat 21
++#endif
++#ifndef SYS_ipc
++#define SYS_ipc 117
++#endif
++#endif
++
+ /* This is a somewhat ugly hack for the experimental 'trace-pc-guard' mode.
+    Basically, we need to make sure that the forkserver is initialized after
+    the LLVM-generated runtime initialization pass, not before. */
+@@ -74,11 +89,21 @@
+ 
+     u32 shm_id = atoi(id_str);
+ 
+-    __afl_area_ptr = shmat(shm_id, NULL, 0);
+-
+-    /* Whooooops. */
++    /* Replace the shmat to syscall. */
+ 
+-    if (__afl_area_ptr == (void *)-1) _exit(1);
++    #ifdef __x86_64__
++    __afl_area_ptr = (u8 *) syscall(SYS_shmat, shm_id, NULL, 0);
++    #else
++    int ret = syscall(SYS_ipc, IPCOP_shmat, shm_id, 0, &__afl_area_ptr, NULL);
++    #endif
++ 
++     /* Whooooops. */
++ 
++    #ifdef __x86_64__
++    if (__afl_area_ptr < 0) _exit(1);
++    #else
++    if (ret < 0) _exit(1);
++    #endif
+ 
+     /* Write something into the bitmap so that even with low AFL_INST_RATIO,
+        our parent doesn't give up on us. */
+diff -urN a/afl-2.39b/llvm_mode/Makefile b/afl-2.39b/llvm_mode/Makefile
+--- a/afl-2.39b/llvm_mode/Makefile	2016-06-24 10:38:49.000000000 +0800
++++ b/afl-2.39b/llvm_mode/Makefile	2017-03-11 08:15:38.557774000 +0800
+@@ -60,7 +60,7 @@
+   PROGS      = ../afl-clang-fast ../afl-llvm-rt.o ../afl-llvm-rt-32.o ../afl-llvm-rt-64.o
+ endif
+ 
+-all: test_deps $(PROGS) test_build all_done
++all: test_deps $(PROGS) all_done
+ 
+ test_deps:
+ ifndef AFL_TRACE_PC
+@@ -83,15 +83,15 @@
+ 	$(CXX) $(CLANG_CFL) -shared $< -o $@ $(CLANG_LFL)
+ 
+ ../afl-llvm-rt.o: afl-llvm-rt.o.c | test_deps
+-	$(CC) $(CFLAGS) -fPIC -c $< -o $@
++	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -fPIC -c $< -o $@
+ 
+ ../afl-llvm-rt-32.o: afl-llvm-rt.o.c | test_deps
+ 	@printf "[*] Building 32-bit variant of the runtime (-m32)... "
+-	@$(CC) $(CFLAGS) -m32 -fPIC -c $< -o $@ 2>/dev/null; if [ "$$?" = "0" ]; then echo "success!"; else echo "failed (that's fine)"; fi
++	@$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -m32 -fPIC -c $< -o $@ 2>/dev/null; if [ "$$?" = "0" ]; then echo "success!"; else echo "failed (that's fine)"; fi
+ 
+ ../afl-llvm-rt-64.o: afl-llvm-rt.o.c | test_deps
+ 	@printf "[*] Building 64-bit variant of the runtime (-m64)... "
+-	@$(CC) $(CFLAGS) -m64 -fPIC -c $< -o $@ 2>/dev/null; if [ "$$?" = "0" ]; then echo "success!"; else echo "failed (that's fine)"; fi
++	@$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -m64 -fPIC -c $< -o $@ 2>/dev/null; if [ "$$?" = "0" ]; then echo "success!"; else echo "failed (that's fine)"; fi
+ 
+ test_build: $(PROGS)
+ 	@echo "[*] Testing the CC wrapper and instrumentation output..."
+@@ -102,7 +102,7 @@
+ 	@cmp -s .test-instr0 .test-instr1; DR="$$?"; rm -f .test-instr0 .test-instr1; if [ "$$DR" = "0" ]; then echo; echo "Oops, the instrumentation does not seem to be behaving correctly!"; echo; echo "Please ping <lcamtuf@google.com> to troubleshoot the issue."; echo; exit 1; fi
+ 	@echo "[+] All right, the instrumentation seems to be working!"
+ 
+-all_done: test_build
++all_done:
+ 	@echo "[+] All done! You can now use '../afl-clang-fast' to compile programs."
+ 
+ .NOTPARALLEL: clean
