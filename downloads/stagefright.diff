@@ -1,0 +1,186 @@
+diff --git a/cmds/stagefright/stagefright.cpp b/cmds/stagefright/stagefright.cpp
+index ca68722..1f1a586 100644
+--- a/cmds/stagefright/stagefright.cpp
++++ b/cmds/stagefright/stagefright.cpp
+@@ -675,8 +675,6 @@ static void dumpCodecProfiles(bool queryDecoders) {
+ }
+ 
+ int main(int argc, char **argv) {
+-    android::ProcessState::self()->startThreadPool();
+-
+     bool audioOnly = false;
+     bool listComponents = false;
+     bool dumpProfiles = false;
+diff --git a/media/libstagefright/MediaCodec.cpp b/media/libstagefright/MediaCodec.cpp
+index e476424..fe378fd 100644
+--- a/media/libstagefright/MediaCodec.cpp
++++ b/media/libstagefright/MediaCodec.cpp
+@@ -112,9 +112,6 @@ private:
+ 
+ MediaCodec::ResourceManagerServiceProxy::ResourceManagerServiceProxy(pid_t pid)
+         : mPid(pid) {
+-    if (mPid == MediaCodec::kNoPid) {
+-        mPid = IPCThreadState::self()->getCallingPid();
+-    }
+ }
+ 
+ MediaCodec::ResourceManagerServiceProxy::~ResourceManagerServiceProxy() {
+@@ -124,14 +121,7 @@ MediaCodec::ResourceManagerServiceProxy::~ResourceManagerServiceProxy() {
+ }
+ 
+ void MediaCodec::ResourceManagerServiceProxy::init() {
+-    sp<IServiceManager> sm = defaultServiceManager();
+-    sp<IBinder> binder = sm->getService(String16("media.resource_manager"));
+-    mService = interface_cast<IResourceManagerService>(binder);
+-    if (mService == NULL) {
+-        ALOGE("Failed to get ResourceManagerService");
+-        return;
+-    }
+-    IInterface::asBinder(mService)->linkToDeath(this);
++    mService = NULL;
+ }
+ 
+ void MediaCodec::ResourceManagerServiceProxy::binderDied(const wp<IBinder>& /*who*/) {
+@@ -2363,8 +2353,6 @@ void MediaCodec::setState(State newState) {
+     mState = newState;
+ 
+     cancelPendingDequeueOperations();
+-
+-    updateBatteryStat();
+ }
+ 
+ void MediaCodec::returnBuffersToCodec(bool isReclaim) {
+diff --git a/media/libstagefright/MediaCodecList.cpp b/media/libstagefright/MediaCodecList.cpp
+index 0fb5072..f1fe9b0 100644
+--- a/media/libstagefright/MediaCodecList.cpp
++++ b/media/libstagefright/MediaCodecList.cpp
+@@ -152,21 +152,7 @@ void MediaCodecList::BinderDeathObserver::binderDied(const wp<IBinder> &who __un
+ sp<IMediaCodecList> MediaCodecList::getInstance() {
+     Mutex::Autolock _l(sRemoteInitMutex);
+     if (sRemoteList == NULL) {
+-        sp<IBinder> binder =
+-            defaultServiceManager()->getService(String16("media.player"));
+-        sp<IMediaPlayerService> service =
+-            interface_cast<IMediaPlayerService>(binder);
+-        if (service.get() != NULL) {
+-            sRemoteList = service->getCodecList();
+-            if (sRemoteList != NULL) {
+-                sBinderDeathObserver = new BinderDeathObserver();
+-                binder->linkToDeath(sBinderDeathObserver.get());
+-            }
+-        }
+-        if (sRemoteList == NULL) {
+-            // if failed to get remote list, create local list
+-            sRemoteList = getLocalInstance();
+-        }
++        sRemoteList = getLocalInstance();
+     }
+     return sRemoteList;
+ }
+diff --git a/media/libstagefright/MediaExtractor.cpp b/media/libstagefright/MediaExtractor.cpp
+index 92ce88c..3d4b9bb 100644
+--- a/media/libstagefright/MediaExtractor.cpp
++++ b/media/libstagefright/MediaExtractor.cpp
+@@ -142,50 +142,7 @@ sp<DecryptHandle> RemoteDataSource::DrmInitialization(const char *mime) {
+ // static
+ sp<IMediaExtractor> MediaExtractor::Create(
+         const sp<DataSource> &source, const char *mime) {
+-    ALOGV("MediaExtractor::Create %s", mime);
+-
+-    char value[PROPERTY_VALUE_MAX];
+-    if (property_get("media.stagefright.extractremote", value, NULL)
+-            && (!strcmp("0", value) || !strcasecmp("false", value))) {
+-        // local extractor
+-        ALOGW("creating media extractor in calling process");
+-        return CreateFromService(source, mime);
+-    } else {
+-        // Check if it's WVM, since WVMExtractor needs to be created in the media server process,
+-        // not the extractor process.
+-        String8 mime8;
+-        float confidence;
+-        sp<AMessage> meta;
+-        if (SniffWVM(source, &mime8, &confidence, &meta) &&
+-                !strcasecmp(mime8, MEDIA_MIMETYPE_CONTAINER_WVM)) {
+-            return new WVMExtractor(source);
+-        }
+-
+-        // Check if it's es-based DRM, since DRMExtractor needs to be created in the media server
+-        // process, not the extractor process.
+-        if (SniffDRM(source, &mime8, &confidence, &meta)) {
+-            const char *drmMime = mime8.string();
+-            ALOGV("Detected media content as '%s' with confidence %.2f", drmMime, confidence);
+-            if (!strncmp(drmMime, "drm+es_based+", 13)) {
+-                // DRMExtractor sets container metadata kKeyIsDRM to 1
+-                return new DRMExtractor(source, drmMime + 14);
+-            }
+-        }
+-
+-        // remote extractor
+-        ALOGV("get service manager");
+-        sp<IBinder> binder = defaultServiceManager()->getService(String16("media.extractor"));
+-
+-        if (binder != 0) {
+-            sp<IMediaExtractorService> mediaExService(interface_cast<IMediaExtractorService>(binder));
+-            sp<IMediaExtractor> ex = mediaExService->makeExtractor(RemoteDataSource::wrap(source), mime);
+-            return ex;
+-        } else {
+-            ALOGE("extractor service not running");
+-            return NULL;
+-        }
+-    }
+-    return NULL;
++    return CreateFromService(source, mime);
+ }
+ 
+ sp<MediaExtractor> MediaExtractor::CreateFromService(
+diff --git a/media/libstagefright/OMXClient.cpp b/media/libstagefright/OMXClient.cpp
+index e40dbcf..1f78bd5 100644
+--- a/media/libstagefright/OMXClient.cpp
++++ b/media/libstagefright/OMXClient.cpp
+@@ -501,45 +501,7 @@ OMXClient::OMXClient() {
+ }
+ 
+ status_t OMXClient::connect() {
+-    sp<IServiceManager> sm = defaultServiceManager();
+-    sp<IBinder> playerbinder = sm->getService(String16("media.player"));
+-    sp<IMediaPlayerService> mediaservice = interface_cast<IMediaPlayerService>(playerbinder);
+-
+-    if (mediaservice.get() == NULL) {
+-        ALOGE("Cannot obtain IMediaPlayerService");
+-        return NO_INIT;
+-    }
+-
+-    sp<IOMX> mediaServerOMX = mediaservice->getOMX();
+-    if (mediaServerOMX.get() == NULL) {
+-        ALOGE("Cannot obtain mediaserver IOMX");
+-        return NO_INIT;
+-    }
+-
+-    // If we don't want to use the codec process, and the media server OMX
+-    // is local, use it directly instead of going through MuxOMX
+-    if (!sCodecProcessEnabled &&
+-            mediaServerOMX->livesLocally(0 /* node */, getpid())) {
+-        mOMX = mediaServerOMX;
+-        return OK;
+-    }
+-
+-    sp<IBinder> codecbinder = sm->getService(String16("media.codec"));
+-    sp<IMediaCodecService> codecservice = interface_cast<IMediaCodecService>(codecbinder);
+-
+-    if (codecservice.get() == NULL) {
+-        ALOGE("Cannot obtain IMediaCodecService");
+-        return NO_INIT;
+-    }
+-
+-    sp<IOMX> mediaCodecOMX = codecservice->getOMX();
+-    if (mediaCodecOMX.get() == NULL) {
+-        ALOGE("Cannot obtain mediacodec IOMX");
+-        return NO_INIT;
+-    }
+-
+-    mOMX = new MuxOMX(mediaServerOMX, mediaCodecOMX);
+-
++    mOMX = new MuxOMX(new OMX, new OMX);
+     return OK;
+ }
+ 
