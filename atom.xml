@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://ele7enxxh.com/"/>
-  <updated>2017-03-26T22:35:02.620Z</updated>
+  <updated>2017-03-26T22:40:00.820Z</updated>
   <id>http://ele7enxxh.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497.html"/>
     <id>http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497.html</id>
     <published>2017-03-27T14:18:00.000Z</published>
-    <updated>2017-03-26T22:35:02.620Z</updated>
+    <updated>2017-03-26T22:40:00.820Z</updated>
     
     <content type="html"><![CDATA[<p>An SIGFPE is raised in function onGetPixels of SkRawCodec.cpp when the mediaserver try to parse a craft TIFF file with zero height dimensions.</p>
 <ul>
@@ -33,7 +33,7 @@
 <h2 id="Description"><a href="#Description" class="headerlink" title="Description"></a>Description</h2><p><a href="http://androidxref.com/7.0.0_r1/xref/external/skia/src/codec/SkRawCodec.cpp#689" target="_blank" rel="external">http://androidxref.com/7.0.0_r1/xref/external/skia/src/codec/SkRawCodec.cpp#689</a></p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (imageSize.h / width &gt; maxDiffRatio || imageSize.h &lt; width ||</div><div class="line">  imageSize.v / height &gt; maxDiffRatio || imageSize.v &lt; height) &#123;</div><div class="line">  <span class="keyword">return</span> SkCodec::kInvalidScale;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>The width and height could be zero without a check for size information of the TIFF file.</p>
-<h2 id="Attack-vector"><a href="#Attack-vector" class="headerlink" title="Attack vector"></a>Attack vector</h2><p>You can click <a href="https://github.com/ele7enxxh/poc-exp/raw/master/CVE-2017-0497/CVE-2017-0497.zip" target="_blank" rel="external">here</a> to get the poc.</p>
+<h2 id="Attack-vector"><a href="#Attack-vector" class="headerlink" title="Attack vector"></a>Attack vector</h2><p>You can click <a href="https://github.com/ele7enxxh/poc-exp/raw/master/CVE-2017-0497/CVE-2017-0497.tiff" target="_blank" rel="external">here</a> to get the poc.</p>
 <p>The easily way to trigger this vulnerability is as follows.</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">BitmapFactory.decodeFile(<span class="string">"CVE-2017-0497.tiff"</span>);</div></pre></td></tr></table></figure>
 <h2 id="Patch"><a href="#Patch" class="headerlink" title="Patch"></a>Patch</h2><p>Verify the size information.</p>
@@ -57,7 +57,7 @@
     <link href="http://ele7enxxh.com/Details-Of-Elevation-Of-Privilege-Vulnerability-In-Recovery-Verifier-CVE-2017-0475.html"/>
     <id>http://ele7enxxh.com/Details-Of-Elevation-Of-Privilege-Vulnerability-In-Recovery-Verifier-CVE-2017-0475.html</id>
     <published>2017-03-23T06:29:00.000Z</published>
-    <updated>2017-03-26T22:11:58.436Z</updated>
+    <updated>2017-03-26T22:40:08.124Z</updated>
     
     <content type="html"><![CDATA[<p>An OOB(out-of-bounds read) issue was found in function verify_file of verifier.cpp, allows attackers to execute arbitrary code in recovery verifier.</p>
 <ul>
@@ -73,7 +73,7 @@
 <p><a href="https://android.googlesource.com/platform/bootable/recovery/+/37d7d67ca216972cba9259aa5866220d6abfaf14/verifier.cpp#234" target="_blank" rel="external">https://android.googlesource.com/platform/bootable/recovery/+/37d7d67ca216972cba9259aa5866220d6abfaf14/verifier.cpp#234</a></p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">uint8_t</span>* signature = eocd + eocd_size - signature_start;</div><div class="line"><span class="keyword">size_t</span> signature_size = signature_start - FOOTER_SIZE;</div><div class="line">LOGI(<span class="string">"signature (offset: 0x%zx, length: %zu): %s\n"</span>,</div><div class="line">        length - signature_start, signature_size,</div><div class="line">        print_hex(signature, signature_size).c_str());</div><div class="line"><span class="keyword">if</span> (!read_pkcs7(signature, signature_size, &amp;sig_der, &amp;sig_der_length)) &#123;</div><div class="line">    LOGE(<span class="string">"Could not find signature DER block\n"</span>);</div><div class="line">    <span class="keyword">return</span> VERIFY_FAILURE;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p><strong>pkcs7_der</strong> will point to a position beyound the bounds of the valid ZIP buffer due to the invaild ‘signature_start’, which may be exploitable.</p>
-<h2 id="Attack-vector"><a href="#Attack-vector" class="headerlink" title="Attack vector"></a>Attack vector</h2><p>You can click <a href="https://github.com/ele7enxxh/poc-exp/raw/master/CVE-2017-0475/CVE-2017-0475.zip" target="_blank" rel="external">here</a> to get the Poc.</p>
+<h2 id="Attack-vector"><a href="#Attack-vector" class="headerlink" title="Attack vector"></a>Attack vector</h2><p>You can click <a href="https://github.com/ele7enxxh/poc-exp/raw/master/CVE-2017-0475/CVE-2017-0475.zip" target="_blank" rel="external">here</a> to get the poc.</p>
 <p>The easily way to trigger this vulnerability is as follows.</p>
 <ol>
 <li>Reboot your Android device to recovery mode;</li>
