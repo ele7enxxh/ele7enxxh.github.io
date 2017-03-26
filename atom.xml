@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://ele7enxxh.com/"/>
-  <updated>2017-03-26T22:03:53.172Z</updated>
+  <updated>2017-03-26T22:35:02.620Z</updated>
   <id>http://ele7enxxh.com/</id>
   
   <author>
@@ -16,11 +16,48 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497</title>
+    <link href="http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497.html"/>
+    <id>http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497.html</id>
+    <published>2017-03-27T14:18:00.000Z</published>
+    <updated>2017-03-26T22:35:02.620Z</updated>
+    
+    <content type="html"><![CDATA[<p>An SIGFPE is raised in function onGetPixels of SkRawCodec.cpp when the mediaserver try to parse a craft TIFF file with zero height dimensions.</p>
+<ul>
+<li>CVE ID: CVE-2017-0497;</li>
+<li>Android ID: A-33300701;</li>
+<li>Severity: Moderate;</li>
+<li>Updated Google devices: All;</li>
+<li>Updated AOSP versions: 7.0, 7.1.1.</li>
+</ul>
+<h2 id="Description"><a href="#Description" class="headerlink" title="Description"></a>Description</h2><p><a href="http://androidxref.com/7.0.0_r1/xref/external/skia/src/codec/SkRawCodec.cpp#689" target="_blank" rel="external">http://androidxref.com/7.0.0_r1/xref/external/skia/src/codec/SkRawCodec.cpp#689</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (imageSize.h / width &gt; maxDiffRatio || imageSize.h &lt; width ||</div><div class="line">  imageSize.v / height &gt; maxDiffRatio || imageSize.v &lt; height) &#123;</div><div class="line">  <span class="keyword">return</span> SkCodec::kInvalidScale;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>The width and height could be zero without a check for size information of the TIFF file.</p>
+<h2 id="Attack-vector"><a href="#Attack-vector" class="headerlink" title="Attack vector"></a>Attack vector</h2><p>You can click <a href="https://github.com/ele7enxxh/poc-exp/raw/master/CVE-2017-0497/CVE-2017-0497.zip" target="_blank" rel="external">here</a> to get the poc.</p>
+<p>The easily way to trigger this vulnerability is as follows.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">BitmapFactory.decodeFile(<span class="string">"CVE-2017-0497.tiff"</span>);</div></pre></td></tr></table></figure>
+<h2 id="Patch"><a href="#Patch" class="headerlink" title="Patch"></a>Patch</h2><p>Verify the size information.</p>
+<p><a href="https://android.googlesource.com/platform/external/skia/+/8888cbf8e74671d44e9ff92ec3847cd647b8cdfb%5E%21/#F1" target="_blank" rel="external">https://android.googlesource.com/platform/external/skia/+/8888cbf8e74671d44e9ff92ec3847cd647b8cdfb%5E%21/#F1</a></p>
+<figure class="highlight diff"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div></pre></td><td class="code"><pre><div class="line">diff --git a/src/codec/SkRawCodec.cpp b/src/codec/SkRawCodec.cpp</div><div class="line">index ab2c55d..eea551e 100644</div><div class="line"><span class="comment">--- a/src/codec/SkRawCodec.cpp</span></div><div class="line"><span class="comment">+++ b/src/codec/SkRawCodec.cpp</span></div><div class="line"><span class="meta">@@ -542,13 +542,15 @@</span></div><div class="line">             (header[0] == 0x4D &amp;&amp; header[1] == 0x4D &amp;&amp; header[2] == 0x00 &amp;&amp; header[3] == 0x2A);</div><div class="line">     &#125;</div><div class="line"> </div><div class="line"><span class="deletion">-    void init(const int width, const int height, const dng_point&amp; cfaPatternSize) &#123;</span></div><div class="line"><span class="addition">+    bool init(const int width, const int height, const dng_point&amp; cfaPatternSize) &#123;</span></div><div class="line">         fImageInfo = SkImageInfo::Make(width, height, kN32_SkColorType, kOpaque_SkAlphaType);</div><div class="line"> </div><div class="line">         // The DNG SDK scales only during demosaicing, so scaling is only possible when</div><div class="line">         // a mosaic info is available.</div><div class="line">         fIsScalable = cfaPatternSize.v != 0 &amp;&amp; cfaPatternSize.h != 0;</div><div class="line">         fIsXtransImage = fIsScalable ? (cfaPatternSize.v == 6 &amp;&amp; cfaPatternSize.h == 6) : false;</div><div class="line"><span class="addition">+</span></div><div class="line"><span class="addition">+        return width &gt; 0 &amp;&amp; height &gt; 0;</span></div><div class="line">     &#125;</div><div class="line"> </div><div class="line">     bool initFromPiex() &#123;</div><div class="line"><span class="meta">@@ -558,15 +560,9 @@</span></div><div class="line">         if (::piex::IsRaw(&amp;piexStream)</div><div class="line">             &amp;&amp; ::piex::GetPreviewImageData(&amp;piexStream, &amp;imageData) == ::piex::Error::kOk)</div><div class="line">         &#123;</div><div class="line"><span class="deletion">-            // Verify the size information, as it is only optional information for PIEX.</span></div><div class="line"><span class="deletion">-            if (imageData.full_width == 0 || imageData.full_height == 0) &#123;</span></div><div class="line"><span class="deletion">-                return false;</span></div><div class="line"><span class="deletion">-            &#125;</span></div><div class="line"><span class="deletion">-</span></div><div class="line">             dng_point cfaPatternSize(imageData.cfa_pattern_dim[1], imageData.cfa_pattern_dim[0]);</div><div class="line"><span class="deletion">-            this-&gt;init(static_cast&lt;int&gt;(imageData.full_width),</span></div><div class="line"><span class="deletion">-                       static_cast&lt;int&gt;(imageData.full_height), cfaPatternSize);</span></div><div class="line"><span class="deletion">-            return true;</span></div><div class="line"><span class="addition">+            return this-&gt;init(static_cast&lt;int&gt;(imageData.full_width),</span></div><div class="line"><span class="addition">+                              static_cast&lt;int&gt;(imageData.full_height), cfaPatternSize);</span></div><div class="line">         &#125;</div><div class="line">         return false;</div><div class="line">     &#125;</div><div class="line"><span class="meta">@@ -594,10 +590,9 @@</span></div><div class="line">             if (fNegative-&gt;GetMosaicInfo() != nullptr) &#123;</div><div class="line">                 cfaPatternSize = fNegative-&gt;GetMosaicInfo()-&gt;fCFAPatternSize;</div><div class="line">             &#125;</div><div class="line"><span class="deletion">-            this-&gt;init(static_cast&lt;int&gt;(fNegative-&gt;DefaultCropSizeH().As_real64()),</span></div><div class="line"><span class="deletion">-                       static_cast&lt;int&gt;(fNegative-&gt;DefaultCropSizeV().As_real64()),</span></div><div class="line"><span class="deletion">-                       cfaPatternSize);</span></div><div class="line"><span class="deletion">-            return true;</span></div><div class="line"><span class="addition">+            return this-&gt;init(static_cast&lt;int&gt;(fNegative-&gt;DefaultCropSizeH().As_real64()),</span></div><div class="line"><span class="addition">+                              static_cast&lt;int&gt;(fNegative-&gt;DefaultCropSizeV().As_real64()),</span></div><div class="line"><span class="addition">+                              cfaPatternSize);</span></div><div class="line">         &#125; catch (...) &#123;</div><div class="line">             return false;</div><div class="line">         &#125;</div></pre></td></tr></table></figure>
+<h2 id="Acknowledgement"><a href="#Acknowledgement" class="headerlink" title="Acknowledgement"></a>Acknowledgement</h2><p>This vulnerability was credited to <a href="https://weibo.com/ele7enxxh" target="_blank" rel="external">Zinuo Han</a> from Chengdu Security Response Center of Qihoo 360 Technology Co. Ltd.</p>
+<h2 id="Timeline"><a href="#Timeline" class="headerlink" title="Timeline"></a>Timeline</h2><p>2016-12-02: ele7enxxh reported the vulnerability to Google;<br>2017-01-24: Google rated it as a Moderate vulnerability;<br>2017-01-31: Google assigned CVE-2017-0497 for this vulnerability;<br>2017-03-07: Google released the patch and disclosed the details of CVE-2017-0497 on <a href="https://source.android.com/security/bulletin/2017-03-01.html" target="_blank" rel="external">Android Security Bulletin-March 2017</a>.</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;An SIGFPE is raised in function onGetPixels of SkRawCodec.cpp when the mediaserver try to parse a craft TIFF file with zero height dimens
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
     <title>Details-Of-Elevation-Of-Privilege-Vulnerability-In-Recovery-Verifier-CVE-2017-0475</title>
     <link href="http://ele7enxxh.com/Details-Of-Elevation-Of-Privilege-Vulnerability-In-Recovery-Verifier-CVE-2017-0475.html"/>
     <id>http://ele7enxxh.com/Details-Of-Elevation-Of-Privilege-Vulnerability-In-Recovery-Verifier-CVE-2017-0475.html</id>
     <published>2017-03-23T06:29:00.000Z</published>
-    <updated>2017-03-26T22:03:53.172Z</updated>
+    <updated>2017-03-26T22:11:58.436Z</updated>
     
     <content type="html"><![CDATA[<p>An OOB(out-of-bounds read) issue was found in function verify_file of verifier.cpp, allows attackers to execute arbitrary code in recovery verifier.</p>
 <ul>
@@ -36,7 +73,7 @@
 <p><a href="https://android.googlesource.com/platform/bootable/recovery/+/37d7d67ca216972cba9259aa5866220d6abfaf14/verifier.cpp#234" target="_blank" rel="external">https://android.googlesource.com/platform/bootable/recovery/+/37d7d67ca216972cba9259aa5866220d6abfaf14/verifier.cpp#234</a></p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">uint8_t</span>* signature = eocd + eocd_size - signature_start;</div><div class="line"><span class="keyword">size_t</span> signature_size = signature_start - FOOTER_SIZE;</div><div class="line">LOGI(<span class="string">"signature (offset: 0x%zx, length: %zu): %s\n"</span>,</div><div class="line">        length - signature_start, signature_size,</div><div class="line">        print_hex(signature, signature_size).c_str());</div><div class="line"><span class="keyword">if</span> (!read_pkcs7(signature, signature_size, &amp;sig_der, &amp;sig_der_length)) &#123;</div><div class="line">    LOGE(<span class="string">"Could not find signature DER block\n"</span>);</div><div class="line">    <span class="keyword">return</span> VERIFY_FAILURE;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p><strong>pkcs7_der</strong> will point to a position beyound the bounds of the valid ZIP buffer due to the invaild ‘signature_start’, which may be exploitable.</p>
-<h2 id="Attack-vector"><a href="#Attack-vector" class="headerlink" title="Attack vector"></a>Attack vector</h2><p>You can click <a href="https://github.com/ele7enxxh/poc-exp/blob/master/CVE-2017-0475/CVE-2017-0475.zip" target="_blank" rel="external">here</a> to get the Poc.</p>
+<h2 id="Attack-vector"><a href="#Attack-vector" class="headerlink" title="Attack vector"></a>Attack vector</h2><p>You can click <a href="https://github.com/ele7enxxh/poc-exp/raw/master/CVE-2017-0475/CVE-2017-0475.zip" target="_blank" rel="external">here</a> to get the Poc.</p>
 <p>The easily way to trigger this vulnerability is as follows.</p>
 <ol>
 <li>Reboot your Android device to recovery mode;</li>
@@ -960,33 +997,6 @@
     <summary type="html">
     
       &lt;p&gt;本文为2015年移动安全挑战赛第一题的writeup。
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>看雪-2014 APP应用攻防竞赛第二阶段第2题（攻击篇）解析</title>
-    <link href="http://ele7enxxh.com/Pediy-2014-Second-Stage-Of-APP-Offensive-And-Defensive-Competition-Analysis-2.html"/>
-    <id>http://ele7enxxh.com/Pediy-2014-Second-Stage-Of-APP-Offensive-And-Defensive-Competition-Analysis-2.html</id>
-    <published>2014-12-19T07:55:00.000Z</published>
-    <updated>2016-03-23T06:31:09.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>本文为看雪-2014 APP应用攻防竞赛第二阶段第2题（攻击篇）的writeup。<a id="more"></a></p>
-<p>链接：<a href="http://bbs.pediy.com/showthread.php?t=193824" target="_blank" rel="external">http://bbs.pediy.com/showthread.php?t=193824</a><br>平台：Android<br>类型：CrackMe</p>
-<p>我就简单记录下关于SO的脱壳部分，达到能使用IDA动态调试的目的，更多分析看这篇帖子吧：<a href="http://bbs.pediy.com/showthread.php?p=1328679。" target="_blank" rel="external">http://bbs.pediy.com/showthread.php?p=1328679。</a></p>
-<p>直接把libcrackme.so拖到IDA，IDA直接挂掉了，拖到010里，用ELF解析脚本跑了下，段解析错误。于是readelf -l之：<br><img src="/images/Pediy-2014-Second-Stage-Of-APP-Offensive-And Defensive-competition-Analysis-2_1.png" alt="1"><br>奇怪的是，只有一个LOAD段，然后一个明显错误的NOTE段，基于NOTE段实际上不会被载入内存，所以直接将其全部清0：<br><img src="/images/Pediy-2014-Second-Stage-Of-APP-Offensive-And Defensive-competition-Analysis-2_2.png" alt="2"><br>然后再拖到IDA里，恩，这次没出错了，不过显然关键代码都被加密了：<br><img src="/images/Pediy-2014-Second-Stage-Of-APP-Offensive-And Defensive-competition-Analysis-2_3.png" alt="3"><br>恩，我用之前研究的SODUMP试了下，但是由于该SO的段表已经发生变化（只有一个LOAD）所以基于相对位置恢复出来的section都错了，不过应该还是基于INIT加壳的。那么还是用IDA将内存DUMP了下来，由于只有一个LOAD段，所以不用进行内存修正，拖到010结果elf头全为0，直接套用原来的头部，再把dynamic段的p_offset的修正一下，当然还得将NOTE段头全部清0，拖到IDA里，一片光明，至少可以静态分析了：<br><img src="/images/Pediy-2014-Second-Stage-Of-APP-Offensive-And Defensive-competition-Analysis-2_4.png" alt="4"><br>接着将原APK中的libcrackme.so替换为处理过后的SO，签名，运行，结果崩溃了。回想了SO加载过后的流程，搞清了为什么崩溃：<br>Android Linker将SO加载进内存后，首先会依次执行INIT段、INIT_ARRAY段中的函数，而对于libcrackme.so，INIT段、INIT_ARRAY段中的函数执行的功能是进行解密操作，但是我们dump出的SO已经完成了解密，此时再调用INIT段、INIT_ARRAY段中的函数，就发生了不可预期的情况，导致崩溃。<br>那么知道了原因，解决办法就是不再执行解密函数。<br>具体方法有很多：</p>
-<ul>
-<li>以DEBUG模式启动APP，在linker的CallConstructors函数处下断，然后直接修改函数流程，直接返回。</li>
-<li>以DEBUG模式启动APP，在soinfo_link_image函数处下断，通过case DT_INIT，case DT_INIT_ARRAY,获得SO中d-&gt;d_tag的位置，直接修改其为任意未知类型。</li>
-</ul>
-<p>第一种需要每次调试都修改，第二种一劳永逸。这样终于可以用IDA动态调试。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;本文为看雪-2014 APP应用攻防竞赛第二阶段第2题（攻击篇）的writeup。
     
     </summary>
     
