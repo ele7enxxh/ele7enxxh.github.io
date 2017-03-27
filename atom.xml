@@ -101,9 +101,9 @@
     <link href="http://ele7enxxh.com/Use-AFL-For-Stagefright-Fuzzing-On-Linux.html"/>
     <id>http://ele7enxxh.com/Use-AFL-For-Stagefright-Fuzzing-On-Linux.html</id>
     <published>2017-03-12T13:49:00.000Z</published>
-    <updated>2017-03-12T14:25:57.000Z</updated>
+    <updated>2017-03-27T23:23:07.341Z</updated>
     
-    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>模糊测试是一种自动向程序传递输入数据并监控其输出的自动化测试技术。通过这种技术，安全人员可以测试程序的可靠性以及识别潜在的安全漏洞。</p>
+    <content type="html"><![CDATA[<p>模糊测试是一种自动向程序传递输入数据并监控其输出的自动化测试技术。通过这种技术，安全人员可以测试程序的可靠性以及识别潜在的安全漏洞。</p>
 <p>我们（<strong>360成都安全响应中心</strong>）将对<a href="https://quandarypeak.com/2013/08/androids-stagefright-media-player-architecture/" target="_blank" rel="external">Stagefright Media Framework</a>进行模糊测试。它是Android系统上用于解析多媒体文件的逻辑算法库，其中包含了大量的安全漏洞，攻击者通过构造特殊的多媒体文件导致拒绝服务或特权升级甚至远程执行代码。</p>
 <p>我们将要使用的模糊测试工具为Michał Zalewski开发的一款最为流行的基于代码覆盖率的开源测试工具：<a href="http://lcamtuf.coredump.cx/afl/" target="_blank" rel="external">AFL(American Fuzzy Lop)</a>。 借助于其高效的策略，AFL已经在真实产品中发现了大量的漏洞。</p>
 <p>在本文中，我们将指导你如何在Linux上使用AFL对stagefright进行模糊测试，从而更高效的复现已知漏洞或发掘新漏洞。 另外，本文不仅适用于stagefright，其中的一些经验同样适用于其它由C/C++编写的Android本地程序。</p>
@@ -239,7 +239,8 @@
     
     <summary type="html">
     
-      &lt;h2 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h2&gt;&lt;p&gt;模糊测试是一种自动向程序传递输入数据并监控其输出的自动化测试技术。通过这种技术，安全人员可以测试程序的可靠性以及识别潜在的安全漏洞。&lt;/p&gt;
+      &lt;p&gt;模糊测试是一种自动向程序传递输入数据并监控其输出的自动化测试技术。通过这种技术，安全人员可以测试程序的可靠性以及识别潜在的安全漏洞。&lt;/p&gt;
+&lt;p&gt;我们（&lt;strong&gt;360成都安全响应中心&lt;/strong&gt;）将对&lt;a href=&quot;https://quandarypeak
     
     </summary>
     
