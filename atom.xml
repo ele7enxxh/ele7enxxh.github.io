@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://ele7enxxh.com/"/>
-  <updated>2017-03-26T22:40:00.820Z</updated>
+  <updated>2017-03-27T23:20:08.129Z</updated>
   <id>http://ele7enxxh.com/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497</title>
+    <title>Details of Denial of Service Vulnerability in Mediaserver (CVE-2017-0497)</title>
     <link href="http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497.html"/>
     <id>http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497.html</id>
     <published>2017-03-27T14:18:00.000Z</published>
-    <updated>2017-03-26T22:40:00.820Z</updated>
+    <updated>2017-03-27T23:20:08.129Z</updated>
     
     <content type="html"><![CDATA[<p>An SIGFPE is raised in function onGetPixels of SkRawCodec.cpp when the mediaserver try to parse a craft TIFF file with zero height dimensions.</p>
 <ul>
@@ -53,11 +53,11 @@
   </entry>
   
   <entry>
-    <title>Details-Of-Elevation-Of-Privilege-Vulnerability-In-Recovery-Verifier-CVE-2017-0475</title>
+    <title>Details of Elevation of Privilege Vulnerability in Recovery Verifier (CVE-2017-0475)</title>
     <link href="http://ele7enxxh.com/Details-Of-Elevation-Of-Privilege-Vulnerability-In-Recovery-Verifier-CVE-2017-0475.html"/>
     <id>http://ele7enxxh.com/Details-Of-Elevation-Of-Privilege-Vulnerability-In-Recovery-Verifier-CVE-2017-0475.html</id>
     <published>2017-03-23T06:29:00.000Z</published>
-    <updated>2017-03-26T22:40:08.124Z</updated>
+    <updated>2017-03-27T23:19:47.909Z</updated>
     
     <content type="html"><![CDATA[<p>An OOB(out-of-bounds read) issue was found in function verify_file of verifier.cpp, allows attackers to execute arbitrary code in recovery verifier.</p>
 <ul>
@@ -71,8 +71,8 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">size_t</span> signature_start = footer[<span class="number">0</span>] + (footer[<span class="number">1</span>] &lt;&lt; <span class="number">8</span>);</div></pre></td></tr></table></figure>
 <p>There is a missing boundary check where <strong>signature_start</strong> should be within the EOCD comment field.</p>
 <p><a href="https://android.googlesource.com/platform/bootable/recovery/+/37d7d67ca216972cba9259aa5866220d6abfaf14/verifier.cpp#234" target="_blank" rel="external">https://android.googlesource.com/platform/bootable/recovery/+/37d7d67ca216972cba9259aa5866220d6abfaf14/verifier.cpp#234</a></p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">uint8_t</span>* signature = eocd + eocd_size - signature_start;</div><div class="line"><span class="keyword">size_t</span> signature_size = signature_start - FOOTER_SIZE;</div><div class="line">LOGI(<span class="string">"signature (offset: 0x%zx, length: %zu): %s\n"</span>,</div><div class="line">        length - signature_start, signature_size,</div><div class="line">        print_hex(signature, signature_size).c_str());</div><div class="line"><span class="keyword">if</span> (!read_pkcs7(signature, signature_size, &amp;sig_der, &amp;sig_der_length)) &#123;</div><div class="line">    LOGE(<span class="string">"Could not find signature DER block\n"</span>);</div><div class="line">    <span class="keyword">return</span> VERIFY_FAILURE;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p><strong>pkcs7_der</strong> will point to a position beyound the bounds of the valid ZIP buffer due to the invaild ‘signature_start’, which may be exploitable.</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">uint8_t* signature = eocd + eocd_size - signature_start;</div><div class="line">size_t signature_size = signature_start - FOOTER_SIZE;</div><div class="line">LOGI("signature (offset: 0x%zx, length: %zu): %s\n",</div><div class="line">        length - signature_start, signature_size,</div><div class="line">        print_hex(signature, signature_size).c_str());</div><div class="line">if (!read_pkcs7(signature, signature_size, &amp;sig_der, &amp;sig_der_length)) &#123;</div><div class="line">    LOGE("Could not find signature DER block\n");</div><div class="line">    return VERIFY_FAILURE;</div><div class="line">&#125;</div><div class="line">...</div><div class="line">static bool read_pkcs7(uint8_t* pkcs7_der, size_t pkcs7_der_len, uint8_t** sig_der, size_t* sig_der_length)</div><div class="line">...</div></pre></td></tr></table></figure>
+<p><strong>pkcs7_der</strong> will point to a position beyound the bounds of the valid ZIP buffer due to the invaild <strong>signature_start</strong>, which may be exploitable.</p>
 <h2 id="Attack-vector"><a href="#Attack-vector" class="headerlink" title="Attack vector"></a>Attack vector</h2><p>You can click <a href="https://github.com/ele7enxxh/poc-exp/raw/master/CVE-2017-0475/CVE-2017-0475.zip" target="_blank" rel="external">here</a> to get the poc.</p>
 <p>The easily way to trigger this vulnerability is as follows.</p>
 <ol>
@@ -247,11 +247,11 @@
   </entry>
   
   <entry>
-    <title>Details of Elevation of privilege vulnerability in libziparchive (CVE-2016-6762)</title>
+    <title>Details of Elevation of Privilege Vulnerability in Libziparchive (CVE-2016-6762)</title>
     <link href="http://ele7enxxh.com/Details-Of-Elevation-Of-Privilege-Vulnerability-In-Libziparchive-CVE-2016-6762.html"/>
     <id>http://ele7enxxh.com/Details-Of-Elevation-Of-Privilege-Vulnerability-In-Libziparchive-CVE-2016-6762.html</id>
     <published>2016-12-15T11:54:00.000Z</published>
-    <updated>2016-12-19T01:32:27.000Z</updated>
+    <updated>2017-03-27T23:20:31.241Z</updated>
     
     <content type="html"><![CDATA[<p>Details of Elevation of privilege vulnerability in libziparchive<a id="more"></a></p>
 <h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p>An Integer overflow vulnerability in libziparchive when opening a ZIP archive that contains a large number of CD offset and size could allow attackers to trigger an out-of-bounds access or cause a denial of service.</p>
