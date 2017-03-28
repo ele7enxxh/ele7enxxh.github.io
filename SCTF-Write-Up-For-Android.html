@@ -5,7 +5,7 @@
 <li>SO有反调试，在init段的_cxa_chk_fail函数中，调用了pthread_create函数创建了新线程，在新线程中进行了反调试检测（/proc/pid/wchan）,若检测到调试，则tempabc = “xctf”，m_y = 9;否则tempabc = “syc”，m_y = 6。而这两个变量都涉及到后面的算法部分，也就是说如果不知道这个反调试的地方，后面算法推出的FLAG始终是错误的。（巧妙之处就在于检测到调试器，并没有让程序直接退出，而是修改了程序算法的参数）</li>
 <li>算法没有用什么加密算法，就是异或、移位之类的，大概跟了下，不深究了。</li>
 </ul>
-</div><script type="text/javascript" src="/js/share.js?v=0.0.0" async></script><a data-url="http://ele7enxxh.com/SCTF-Write-Up-For-Android.html" data-id="cj0sqopsi000nq0433me3z0p3" class="article-share-link">Share</a><div class="tags"></div><div class="post-nav"><a href="/Unpack-Android-Shared-Library-Based-On-Init_Array-Encryption.html" class="pre">基于init_array加密的SO的脱壳</a><a href="/Icmpsh-For-Android.html" class="next">icmpsh for Android</a></div><div id="disqus_thread"><script>var disqus_shortname = 'ele7enxxh';
+</div><script type="text/javascript" src="/js/share.js?v=0.0.0" async></script><a data-url="http://ele7enxxh.com/SCTF-Write-Up-For-Android.html" data-id="cj0u3fbfa000kr043src5ldqo" class="article-share-link">Share</a><div class="tags"></div><div class="post-nav"><a href="/Unpack-Android-Shared-Library-Based-On-Init_Array-Encryption.html" class="pre">基于init_array加密的SO的脱壳</a><a href="/Icmpsh-For-Android.html" class="next">icmpsh for Android</a></div><div id="disqus_thread"><script>var disqus_shortname = 'ele7enxxh';
 var disqus_identifier = 'SCTF-Write-Up-For-Android.html';
 var disqus_title = 'SCTF上的一道Android题';
 var disqus_url = 'http://ele7enxxh.com/SCTF-Write-Up-For-Android.html';
