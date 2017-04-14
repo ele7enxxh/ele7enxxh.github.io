@@ -18,7 +18,7 @@
 <li>单步跟踪结合IDA静态分析和F5，并在fgets处下断点，SO是通过读取/proc/pid/status文件中的Tracepid字段来判断是否有调试，如果检测到调试程序将会退出。最终，我用patch跳转指令（IDA的Edit菜单里Patch program-&gt;Change byte可以修改指令的机器码，可以改成0 0 0 0）掉了反调试：<br><img src="/images/2015-Mobile-Security-Challenge-2_1.png" alt="1"></li>
 </ul>
 <p>过掉反调试接下来就easy了，在Java_com_yaotong_crackme_MainActivity_securityCheck下断点，让IDA continue，最终验证逻辑就是一个简单的字符串比较：<br><img src="/images/2015-Mobile-Security-Challenge-2_2.png" alt="2"><br>最终密码为：aiyou,bucuoo</p>
-</div><script type="text/javascript" src="/js/share.js?v=0.0.0" async></script><a data-url="http://ele7enxxh.com/2015-Mobile-Security-Challenge-2.html" data-id="cj1ig7cfb0003ms439f72ybg7" class="article-share-link">Share</a><div class="tags"></div><div class="post-nav"><a href="/2015-Mobile-Security-Challenge-3.html" class="pre">2015移动安全挑战赛-第3题</a><a href="/2015-Mobile-Security-Challenge-1.html" class="next">2015移动安全挑战赛-第1题</a></div><div id="disqus_thread"><script>var disqus_shortname = 'ele7enxxh';
+</div><script type="text/javascript" src="/js/share.js?v=0.0.0" async></script><a data-url="http://ele7enxxh.com/2015-Mobile-Security-Challenge-2.html" data-id="cj1igagyc0003nz43j2f5jeym" class="article-share-link">Share</a><div class="tags"></div><div class="post-nav"><a href="/2015-Mobile-Security-Challenge-3.html" class="pre">2015移动安全挑战赛-第3题</a><a href="/2015-Mobile-Security-Challenge-1.html" class="next">2015移动安全挑战赛-第1题</a></div><div id="disqus_thread"><script>var disqus_shortname = 'ele7enxxh';
 var disqus_identifier = '2015-Mobile-Security-Challenge-2.html';
 var disqus_title = '2015移动安全挑战赛-第2题';
 var disqus_url = 'http://ele7enxxh.com/2015-Mobile-Security-Challenge-2.html';
