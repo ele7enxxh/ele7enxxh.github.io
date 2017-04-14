@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://ele7enxxh.com/"/>
-  <updated>2017-03-27T23:20:08.129Z</updated>
+  <updated>2017-04-14T22:58:13.076Z</updated>
   <id>http://ele7enxxh.com/</id>
   
   <author>
@@ -16,11 +16,55 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>Details of Denial of Service Vulnerability in Libskia (CVE-2017-0548)</title>
+    <link href="http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Libskia-CVE-2017-0548.html"/>
+    <id>http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Libskia-CVE-2017-0548.html</id>
+    <published>2017-04-13T09:34:00.000Z</published>
+    <updated>2017-04-14T22:58:13.076Z</updated>
+    
+    <content type="html"><![CDATA[<p>An OOM was found in <code>SkBmpRLECodec</code> constructor of <code>SkBmpRLECodec.cpp</code>, allows attackers to cause a denial of service via a craft bmp file with a very large RLE size field which is more bigger than the real size of the file.</p>
+<ul>
+<li>CVE ID: CVE-2017-0548;</li>
+<li>Android ID: A-33251605;</li>
+<li>Severity: High;</li>
+<li>Updated Google devices: All;</li>
+<li>Updated AOSP versions: 7.0, 7.1.1.</li>
+</ul>
+<h2 id="Description"><a href="#Description" class="headerlink" title="Description"></a>Description</h2><p><a href="https://android.googlesource.com/platform/external/skia/+/d1fb426850d72867298383bf029862acc9d52598/src/codec/SkBmpCodec.cpp#121" target="_blank" rel="external">https://android.googlesource.com/platform/external/skia/+/d1fb426850d72867298383bf029862acc9d52598/src/codec/SkBmpCodec.cpp#121</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">totalBytes = get_int(hBuffer.get(), <span class="number">2</span>);</div><div class="line">offset = get_int(hBuffer.get(), <span class="number">10</span>);</div><div class="line"><span class="keyword">if</span> (offset &lt; kBmpHeaderBytes + kBmpOS2V1Bytes) &#123;</div><div class="line">    SkCodecPrintf(<span class="string">"Error: invalid starting location for pixel data\n"</span>);</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>While proceeding a bmp file, the <code>SkBmpCodec::ReadHeader</code> function use <code>totalBytes</code> value and <code>offset</code> value from the file on line 121-122 without a vaild checking. It means that attackers can fully control the two value. In this post, <code>0xffffffff</code> are passed to <code>totalBytes</code> and <code>0x0</code> are passed to <code>offset</code>.</p>
+<p><a href="https://android.googlesource.com/platform/external/skia/+/d1fb426850d72867298383bf029862acc9d52598/src/codec/SkBmpCodec.cpp#458" target="_blank" rel="external">https://android.googlesource.com/platform/external/skia/+/d1fb426850d72867298383bf029862acc9d52598/src/codec/SkBmpCodec.cpp#458</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (totalBytes &lt;= offset &amp;&amp; kRLE_BmpInputFormat == inputFormat) &#123;</div><div class="line">    SkCodecPrintf(<span class="string">"Error: RLE requires valid input size.\n"</span>);</div><div class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">&#125;</div><div class="line"><span class="keyword">const</span> <span class="keyword">size_t</span> RLEBytes = totalBytes - offset;</div></pre></td></tr></table></figure>
+<p>The (<code>totalBytes</code> - <code>offset</code>) calculation is <code>0xffffffff</code>(<code>0xffffffff</code> - <code>0x0</code>), so the value of <code>RLEBytes</code> is a very large number, <code>0xffffffff</code>. Then the <code>RLEBytes</code> value is passed to <code>SkBmpRLECodec</code> constructor on line 521.</p>
+<p><a href="https://android.googlesource.com/platform/external/skia/+/d1fb426850d72867298383bf029862acc9d52598/src/codec/SkBmpCodec.cpp#521" target="_blank" rel="external">https://android.googlesource.com/platform/external/skia/+/d1fb426850d72867298383bf029862acc9d52598/src/codec/SkBmpCodec.cpp#521</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">*codecOut = <span class="keyword">new</span> SkBmpRLECodec(imageInfo, stream, bitsPerPixel, numColors,</div><div class="line">         bytesPerColor, offset - bytesRead, rowOrder, RLEBytes);</div></pre></td></tr></table></figure>
+<p><a href="https://android.googlesource.com/platform/external/skia/+/d1fb426850d72867298383bf029862acc9d52598/src/codec/SkBmpRLECodec.cpp#27" target="_blank" rel="external">https://android.googlesource.com/platform/external/skia/+/d1fb426850d72867298383bf029862acc9d52598/src/codec/SkBmpRLECodec.cpp#27</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">SkBmpRLECodec::SkBmpRLECodec(<span class="keyword">const</span> SkImageInfo&amp; info, SkStream* stream,</div><div class="line">                             <span class="keyword">uint16_t</span> bitsPerPixel, <span class="keyword">uint32_t</span> numColors,</div><div class="line">                             <span class="keyword">uint32_t</span> bytesPerColor, <span class="keyword">uint32_t</span> offset,</div><div class="line">                             SkCodec::SkScanlineOrder rowOrder,</div><div class="line">                             <span class="keyword">size_t</span> RLEBytes)</div><div class="line">    : INHERITED(info, stream, bitsPerPixel, rowOrder)</div><div class="line">    , fColorTable(<span class="literal">nullptr</span>)</div><div class="line">    , fNumColors(numColors)</div><div class="line">    , fBytesPerColor(bytesPerColor)</div><div class="line">    , fOffset(offset)</div><div class="line">    , fStreamBuffer(<span class="keyword">new</span> <span class="keyword">uint8_t</span>[RLEBytes])</div><div class="line">    , fRLEBytes(RLEBytes)</div><div class="line">    , fOrigRLEBytes(RLEBytes)</div><div class="line">    , fCurrRLEByte(<span class="number">0</span>)</div><div class="line">    , fSampleX(<span class="number">1</span>)</div><div class="line">&#123;&#125;</div></pre></td></tr></table></figure>
+<p>Finally a large memory allocation is triggerd on line 27.</p>
+<h2 id="Attack-vector"><a href="#Attack-vector" class="headerlink" title="Attack vector"></a>Attack vector</h2><p>You can click <a href="https://github.com/ele7enxxh/poc-exp/raw/master/CVE-2017-0548/CVE-2017-0548.bmp" target="_blank" rel="external">here</a> to get the poc.</p>
+<p>The easily way to trigger this vulnerability is as follows.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">BitmapFactory.decodeFile(<span class="string">"CVE-2017-0548.bmp"</span>);</div></pre></td></tr></table></figure>
+<h2 id="Patch"><a href="#Patch" class="headerlink" title="Patch"></a>Patch</h2><p>Fix the RLE size value.</p>
+<p><a href="https://android.googlesource.com/platform/external/skia/+/318e3505ac2436c62ec19fd27ebe9f8e7d174544" target="_blank" rel="external">https://android.googlesource.com/platform/external/skia/+/318e3505ac2436c62ec19fd27ebe9f8e7d174544</a></p>
+<h2 id="Acknowledgement"><a href="#Acknowledgement" class="headerlink" title="Acknowledgement"></a>Acknowledgement</h2><p>This vulnerability was credited to <a href="https://weibo.com/ele7enxxh" target="_blank" rel="external">Zinuo Han</a> from Chengdu Security Response Center of Qihoo 360 Technology Co. Ltd.</p>
+<h2 id="Timeline"><a href="#Timeline" class="headerlink" title="Timeline"></a>Timeline</h2><p>2016-11-29: ele7enxxh reported the vulnerability to Google;<br>2017-01-12: Google rated it as a High vulnerability;<br>2017-03-01: Google assigned CVE-2017-0548 for this vulnerability;<br>2017-04-03: Google released the patch and disclosed the details of CVE-2017-0548 on <a href="https://source.android.com/security/bulletin/2017-04-01" target="_blank" rel="external">Android Security Bulletin-April 2017</a>.</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;An OOM was found in &lt;code&gt;SkBmpRLECodec&lt;/code&gt; constructor of &lt;code&gt;SkBmpRLECodec.cpp&lt;/code&gt;, allows attackers to cause a denial of servi
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
     <title>Details of Denial of Service Vulnerability in Mediaserver (CVE-2017-0497)</title>
     <link href="http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497.html"/>
     <id>http://ele7enxxh.com/Details-Of-Denial-Of-Service-Vulnerability-In-Mediaserver-CVE-2017-0497.html</id>
     <published>2017-03-27T14:18:00.000Z</published>
-    <updated>2017-03-27T23:20:08.129Z</updated>
+    <updated>2017-04-12T00:37:26.000Z</updated>
     
     <content type="html"><![CDATA[<p>An SIGFPE is raised in function onGetPixels of SkRawCodec.cpp when the mediaserver try to parse a craft TIFF file with zero height dimensions.</p>
 <ul>
@@ -976,28 +1020,6 @@
     <summary type="html">
     
       &lt;p&gt;本文为2015年移动安全挑战赛第二题的writeup。
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
-    <title>2015移动安全挑战赛-第1题</title>
-    <link href="http://ele7enxxh.com/2015-Mobile-Security-Challenge-1.html"/>
-    <id>http://ele7enxxh.com/2015-Mobile-Security-Challenge-1.html</id>
-    <published>2015-01-26T09:33:03.000Z</published>
-    <updated>2016-03-23T06:25:07.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>本文为2015年移动安全挑战赛第一题的writeup。<a id="more"></a></p>
-<p>这次算是正式的参加了一次线上的比赛，所以还是记录下来。</p>
-<p>链接：<a href="http://msc.pediy.com/timu.htm" target="_blank" rel="external">http://msc.pediy.com/timu.htm</a><br>平台：Android<br>类型：CrackMe</p>
-<p>第一题非常简单，送分题。逻辑全部在Java层，还贴心的帮我们打了log，么么哒！<br><img src="/images/2015-Mobile-Security-Challenge-1_1.png" alt="1"><br>table是映射表，pw是正确的映射结果，enPassword是我们输入数据的映射结果，当pw==enPassword时验证成功。<br>最终的密码为：581026</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;本文为2015年移动安全挑战赛第一题的writeup。
     
     </summary>
     
